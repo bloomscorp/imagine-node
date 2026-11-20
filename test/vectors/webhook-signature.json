@@ -1,0 +1,154 @@
+{
+  "description": "Imagine webhook signature vectors (blooms.ai documentation/imagine/api.md §8). Shared by imagine-node and imagine-java. Header: Blooms-Signature: t=<unix seconds>,v1=<hex HMAC-SHA256(key = secret as UTF-8, message = \"<t>.\" + body as UTF-8 bytes)>. Verify order: parse the header, compare signatures in constant time, then check |now - t| <= toleranceSec, then parse the body.",
+  "secret": "whsec_0123456789abcdef0123456789abcdef0123456789abcdef",
+  "t": 1795132800,
+  "body": "{\"id\":\"evt_6573a1b2c3d4e5f60718293a\",\"type\":\"imagine.images.ready\",\"createdAt\":\"2026-11-20T00:00:00.000Z\",\"projectId\":\"6573a1b2c3d4e5f607182930\",\"data\":{\"job\":{\"_id\":\"6573a1b2c3d4e5f607182931\",\"name\":\"Catalogue · Café crème ☕\",\"status\":\"running\",\"counts\":{\"total\":1000,\"done\":50,\"failed\":0,\"cancelled\":0},\"externalRef\":\"catalogue-2026-11\"},\"images\":[{\"_id\":\"6573a1b2c3d4e5f607182932\",\"seq\":0,\"externalRef\":\"sku-123/front\",\"url\":null,\"destination\":{\"destinationId\":\"6573a1b2c3d4e5f607182933\",\"bucket\":\"acme-images\",\"key\":\"imagine/6573a1b2c3d4e5f607182931/000000-6573a1b2c3d4e5f607182932.png\"}}],\"manifestKey\":\"imagine/6573a1b2c3d4e5f607182931/manifest-0001.json\"}}",
+  "expectedSignature": "d1d684647ea7ab524378b2b2729e552f5a36f8b6a77c74d21895c19caae1e490",
+  "expectedHeader": "t=1795132800,v1=d1d684647ea7ab524378b2b2729e552f5a36f8b6a77c74d21895c19caae1e490",
+  "cases": [
+    {
+      "name": "valid",
+      "body": "{\"id\":\"evt_6573a1b2c3d4e5f60718293a\",\"type\":\"imagine.images.ready\",\"createdAt\":\"2026-11-20T00:00:00.000Z\",\"projectId\":\"6573a1b2c3d4e5f607182930\",\"data\":{\"job\":{\"_id\":\"6573a1b2c3d4e5f607182931\",\"name\":\"Catalogue · Café crème ☕\",\"status\":\"running\",\"counts\":{\"total\":1000,\"done\":50,\"failed\":0,\"cancelled\":0},\"externalRef\":\"catalogue-2026-11\"},\"images\":[{\"_id\":\"6573a1b2c3d4e5f607182932\",\"seq\":0,\"externalRef\":\"sku-123/front\",\"url\":null,\"destination\":{\"destinationId\":\"6573a1b2c3d4e5f607182933\",\"bucket\":\"acme-images\",\"key\":\"imagine/6573a1b2c3d4e5f607182931/000000-6573a1b2c3d4e5f607182932.png\"}}],\"manifestKey\":\"imagine/6573a1b2c3d4e5f607182931/manifest-0001.json\"}}",
+      "header": "t=1795132800,v1=d1d684647ea7ab524378b2b2729e552f5a36f8b6a77c74d21895c19caae1e490",
+      "secret": "whsec_0123456789abcdef0123456789abcdef0123456789abcdef",
+      "now": 1795132800,
+      "toleranceSec": 300,
+      "valid": true
+    },
+    {
+      "name": "valid at the edge of the tolerance (300 s old)",
+      "body": "{\"id\":\"evt_6573a1b2c3d4e5f60718293a\",\"type\":\"imagine.images.ready\",\"createdAt\":\"2026-11-20T00:00:00.000Z\",\"projectId\":\"6573a1b2c3d4e5f607182930\",\"data\":{\"job\":{\"_id\":\"6573a1b2c3d4e5f607182931\",\"name\":\"Catalogue · Café crème ☕\",\"status\":\"running\",\"counts\":{\"total\":1000,\"done\":50,\"failed\":0,\"cancelled\":0},\"externalRef\":\"catalogue-2026-11\"},\"images\":[{\"_id\":\"6573a1b2c3d4e5f607182932\",\"seq\":0,\"externalRef\":\"sku-123/front\",\"url\":null,\"destination\":{\"destinationId\":\"6573a1b2c3d4e5f607182933\",\"bucket\":\"acme-images\",\"key\":\"imagine/6573a1b2c3d4e5f607182931/000000-6573a1b2c3d4e5f607182932.png\"}}],\"manifestKey\":\"imagine/6573a1b2c3d4e5f607182931/manifest-0001.json\"}}",
+      "header": "t=1795132800,v1=d1d684647ea7ab524378b2b2729e552f5a36f8b6a77c74d21895c19caae1e490",
+      "secret": "whsec_0123456789abcdef0123456789abcdef0123456789abcdef",
+      "now": 1795133100,
+      "toleranceSec": 300,
+      "valid": true
+    },
+    {
+      "name": "valid with spaces and an unknown scheme in the header",
+      "body": "{\"id\":\"evt_6573a1b2c3d4e5f60718293a\",\"type\":\"imagine.images.ready\",\"createdAt\":\"2026-11-20T00:00:00.000Z\",\"projectId\":\"6573a1b2c3d4e5f607182930\",\"data\":{\"job\":{\"_id\":\"6573a1b2c3d4e5f607182931\",\"name\":\"Catalogue · Café crème ☕\",\"status\":\"running\",\"counts\":{\"total\":1000,\"done\":50,\"failed\":0,\"cancelled\":0},\"externalRef\":\"catalogue-2026-11\"},\"images\":[{\"_id\":\"6573a1b2c3d4e5f607182932\",\"seq\":0,\"externalRef\":\"sku-123/front\",\"url\":null,\"destination\":{\"destinationId\":\"6573a1b2c3d4e5f607182933\",\"bucket\":\"acme-images\",\"key\":\"imagine/6573a1b2c3d4e5f607182931/000000-6573a1b2c3d4e5f607182932.png\"}}],\"manifestKey\":\"imagine/6573a1b2c3d4e5f607182931/manifest-0001.json\"}}",
+      "header": "t=1795132800, v0=abc, v1=d1d684647ea7ab524378b2b2729e552f5a36f8b6a77c74d21895c19caae1e490",
+      "secret": "whsec_0123456789abcdef0123456789abcdef0123456789abcdef",
+      "now": 1795132800,
+      "toleranceSec": 300,
+      "valid": true
+    },
+    {
+      "name": "valid when the second of two v1 values matches (secret rotation)",
+      "body": "{\"id\":\"evt_6573a1b2c3d4e5f60718293a\",\"type\":\"imagine.images.ready\",\"createdAt\":\"2026-11-20T00:00:00.000Z\",\"projectId\":\"6573a1b2c3d4e5f607182930\",\"data\":{\"job\":{\"_id\":\"6573a1b2c3d4e5f607182931\",\"name\":\"Catalogue · Café crème ☕\",\"status\":\"running\",\"counts\":{\"total\":1000,\"done\":50,\"failed\":0,\"cancelled\":0},\"externalRef\":\"catalogue-2026-11\"},\"images\":[{\"_id\":\"6573a1b2c3d4e5f607182932\",\"seq\":0,\"externalRef\":\"sku-123/front\",\"url\":null,\"destination\":{\"destinationId\":\"6573a1b2c3d4e5f607182933\",\"bucket\":\"acme-images\",\"key\":\"imagine/6573a1b2c3d4e5f607182931/000000-6573a1b2c3d4e5f607182932.png\"}}],\"manifestKey\":\"imagine/6573a1b2c3d4e5f607182931/manifest-0001.json\"}}",
+      "header": "t=1795132800,v1=84d7a2659b4d713b0518e0a2cebc5b2334bb4de26a5d4d0c6ab3e8826f520396,v1=d1d684647ea7ab524378b2b2729e552f5a36f8b6a77c74d21895c19caae1e490",
+      "secret": "whsec_0123456789abcdef0123456789abcdef0123456789abcdef",
+      "now": 1795132800,
+      "toleranceSec": 300,
+      "valid": true
+    },
+    {
+      "name": "valid with an upper-case hex signature",
+      "body": "{\"id\":\"evt_6573a1b2c3d4e5f60718293a\",\"type\":\"imagine.images.ready\",\"createdAt\":\"2026-11-20T00:00:00.000Z\",\"projectId\":\"6573a1b2c3d4e5f607182930\",\"data\":{\"job\":{\"_id\":\"6573a1b2c3d4e5f607182931\",\"name\":\"Catalogue · Café crème ☕\",\"status\":\"running\",\"counts\":{\"total\":1000,\"done\":50,\"failed\":0,\"cancelled\":0},\"externalRef\":\"catalogue-2026-11\"},\"images\":[{\"_id\":\"6573a1b2c3d4e5f607182932\",\"seq\":0,\"externalRef\":\"sku-123/front\",\"url\":null,\"destination\":{\"destinationId\":\"6573a1b2c3d4e5f607182933\",\"bucket\":\"acme-images\",\"key\":\"imagine/6573a1b2c3d4e5f607182931/000000-6573a1b2c3d4e5f607182932.png\"}}],\"manifestKey\":\"imagine/6573a1b2c3d4e5f607182931/manifest-0001.json\"}}",
+      "header": "t=1795132800,v1=D1D684647EA7AB524378B2B2729E552F5A36F8B6A77C74D21895C19CAAE1E490",
+      "secret": "whsec_0123456789abcdef0123456789abcdef0123456789abcdef",
+      "now": 1795132800,
+      "toleranceSec": 300,
+      "valid": true
+    },
+    {
+      "name": "tampered body",
+      "body": "{\"id\":\"evt_6573a1b2c3d4e5f60718293a\",\"type\":\"imagine.images.ready\",\"createdAt\":\"2026-11-20T00:00:00.000Z\",\"projectId\":\"6573a1b2c3d4e5f607182930\",\"data\":{\"job\":{\"_id\":\"6573a1b2c3d4e5f607182931\",\"name\":\"Catalogue · Café crème ☕\",\"status\":\"running\",\"counts\":{\"total\":1000,\"done\":51,\"failed\":0,\"cancelled\":0},\"externalRef\":\"catalogue-2026-11\"},\"images\":[{\"_id\":\"6573a1b2c3d4e5f607182932\",\"seq\":0,\"externalRef\":\"sku-123/front\",\"url\":null,\"destination\":{\"destinationId\":\"6573a1b2c3d4e5f607182933\",\"bucket\":\"acme-images\",\"key\":\"imagine/6573a1b2c3d4e5f607182931/000000-6573a1b2c3d4e5f607182932.png\"}}],\"manifestKey\":\"imagine/6573a1b2c3d4e5f607182931/manifest-0001.json\"}}",
+      "header": "t=1795132800,v1=d1d684647ea7ab524378b2b2729e552f5a36f8b6a77c74d21895c19caae1e490",
+      "secret": "whsec_0123456789abcdef0123456789abcdef0123456789abcdef",
+      "now": 1795132800,
+      "toleranceSec": 300,
+      "valid": false,
+      "error": "SIGNATURE_MISMATCH"
+    },
+    {
+      "name": "wrong secret",
+      "body": "{\"id\":\"evt_6573a1b2c3d4e5f60718293a\",\"type\":\"imagine.images.ready\",\"createdAt\":\"2026-11-20T00:00:00.000Z\",\"projectId\":\"6573a1b2c3d4e5f607182930\",\"data\":{\"job\":{\"_id\":\"6573a1b2c3d4e5f607182931\",\"name\":\"Catalogue · Café crème ☕\",\"status\":\"running\",\"counts\":{\"total\":1000,\"done\":50,\"failed\":0,\"cancelled\":0},\"externalRef\":\"catalogue-2026-11\"},\"images\":[{\"_id\":\"6573a1b2c3d4e5f607182932\",\"seq\":0,\"externalRef\":\"sku-123/front\",\"url\":null,\"destination\":{\"destinationId\":\"6573a1b2c3d4e5f607182933\",\"bucket\":\"acme-images\",\"key\":\"imagine/6573a1b2c3d4e5f607182931/000000-6573a1b2c3d4e5f607182932.png\"}}],\"manifestKey\":\"imagine/6573a1b2c3d4e5f607182931/manifest-0001.json\"}}",
+      "header": "t=1795132800,v1=d1d684647ea7ab524378b2b2729e552f5a36f8b6a77c74d21895c19caae1e490",
+      "secret": "whsec_fedcba9876543210fedcba9876543210fedcba9876543210",
+      "now": 1795132800,
+      "toleranceSec": 300,
+      "valid": false,
+      "error": "SIGNATURE_MISMATCH"
+    },
+    {
+      "name": "timestamp changed in the header",
+      "body": "{\"id\":\"evt_6573a1b2c3d4e5f60718293a\",\"type\":\"imagine.images.ready\",\"createdAt\":\"2026-11-20T00:00:00.000Z\",\"projectId\":\"6573a1b2c3d4e5f607182930\",\"data\":{\"job\":{\"_id\":\"6573a1b2c3d4e5f607182931\",\"name\":\"Catalogue · Café crème ☕\",\"status\":\"running\",\"counts\":{\"total\":1000,\"done\":50,\"failed\":0,\"cancelled\":0},\"externalRef\":\"catalogue-2026-11\"},\"images\":[{\"_id\":\"6573a1b2c3d4e5f607182932\",\"seq\":0,\"externalRef\":\"sku-123/front\",\"url\":null,\"destination\":{\"destinationId\":\"6573a1b2c3d4e5f607182933\",\"bucket\":\"acme-images\",\"key\":\"imagine/6573a1b2c3d4e5f607182931/000000-6573a1b2c3d4e5f607182932.png\"}}],\"manifestKey\":\"imagine/6573a1b2c3d4e5f607182931/manifest-0001.json\"}}",
+      "header": "t=1795132801,v1=d1d684647ea7ab524378b2b2729e552f5a36f8b6a77c74d21895c19caae1e490",
+      "secret": "whsec_0123456789abcdef0123456789abcdef0123456789abcdef",
+      "now": 1795132800,
+      "toleranceSec": 300,
+      "valid": false,
+      "error": "SIGNATURE_MISMATCH"
+    },
+    {
+      "name": "too old (301 s)",
+      "body": "{\"id\":\"evt_6573a1b2c3d4e5f60718293a\",\"type\":\"imagine.images.ready\",\"createdAt\":\"2026-11-20T00:00:00.000Z\",\"projectId\":\"6573a1b2c3d4e5f607182930\",\"data\":{\"job\":{\"_id\":\"6573a1b2c3d4e5f607182931\",\"name\":\"Catalogue · Café crème ☕\",\"status\":\"running\",\"counts\":{\"total\":1000,\"done\":50,\"failed\":0,\"cancelled\":0},\"externalRef\":\"catalogue-2026-11\"},\"images\":[{\"_id\":\"6573a1b2c3d4e5f607182932\",\"seq\":0,\"externalRef\":\"sku-123/front\",\"url\":null,\"destination\":{\"destinationId\":\"6573a1b2c3d4e5f607182933\",\"bucket\":\"acme-images\",\"key\":\"imagine/6573a1b2c3d4e5f607182931/000000-6573a1b2c3d4e5f607182932.png\"}}],\"manifestKey\":\"imagine/6573a1b2c3d4e5f607182931/manifest-0001.json\"}}",
+      "header": "t=1795132800,v1=d1d684647ea7ab524378b2b2729e552f5a36f8b6a77c74d21895c19caae1e490",
+      "secret": "whsec_0123456789abcdef0123456789abcdef0123456789abcdef",
+      "now": 1795133101,
+      "toleranceSec": 300,
+      "valid": false,
+      "error": "SIGNATURE_EXPIRED"
+    },
+    {
+      "name": "too far in the future (301 s)",
+      "body": "{\"id\":\"evt_6573a1b2c3d4e5f60718293a\",\"type\":\"imagine.images.ready\",\"createdAt\":\"2026-11-20T00:00:00.000Z\",\"projectId\":\"6573a1b2c3d4e5f607182930\",\"data\":{\"job\":{\"_id\":\"6573a1b2c3d4e5f607182931\",\"name\":\"Catalogue · Café crème ☕\",\"status\":\"running\",\"counts\":{\"total\":1000,\"done\":50,\"failed\":0,\"cancelled\":0},\"externalRef\":\"catalogue-2026-11\"},\"images\":[{\"_id\":\"6573a1b2c3d4e5f607182932\",\"seq\":0,\"externalRef\":\"sku-123/front\",\"url\":null,\"destination\":{\"destinationId\":\"6573a1b2c3d4e5f607182933\",\"bucket\":\"acme-images\",\"key\":\"imagine/6573a1b2c3d4e5f607182931/000000-6573a1b2c3d4e5f607182932.png\"}}],\"manifestKey\":\"imagine/6573a1b2c3d4e5f607182931/manifest-0001.json\"}}",
+      "header": "t=1795132800,v1=d1d684647ea7ab524378b2b2729e552f5a36f8b6a77c74d21895c19caae1e490",
+      "secret": "whsec_0123456789abcdef0123456789abcdef0123456789abcdef",
+      "now": 1795132499,
+      "toleranceSec": 300,
+      "valid": false,
+      "error": "SIGNATURE_EXPIRED"
+    },
+    {
+      "name": "no v1",
+      "body": "{\"id\":\"evt_6573a1b2c3d4e5f60718293a\",\"type\":\"imagine.images.ready\",\"createdAt\":\"2026-11-20T00:00:00.000Z\",\"projectId\":\"6573a1b2c3d4e5f607182930\",\"data\":{\"job\":{\"_id\":\"6573a1b2c3d4e5f607182931\",\"name\":\"Catalogue · Café crème ☕\",\"status\":\"running\",\"counts\":{\"total\":1000,\"done\":50,\"failed\":0,\"cancelled\":0},\"externalRef\":\"catalogue-2026-11\"},\"images\":[{\"_id\":\"6573a1b2c3d4e5f607182932\",\"seq\":0,\"externalRef\":\"sku-123/front\",\"url\":null,\"destination\":{\"destinationId\":\"6573a1b2c3d4e5f607182933\",\"bucket\":\"acme-images\",\"key\":\"imagine/6573a1b2c3d4e5f607182931/000000-6573a1b2c3d4e5f607182932.png\"}}],\"manifestKey\":\"imagine/6573a1b2c3d4e5f607182931/manifest-0001.json\"}}",
+      "header": "t=1795132800",
+      "secret": "whsec_0123456789abcdef0123456789abcdef0123456789abcdef",
+      "now": 1795132800,
+      "toleranceSec": 300,
+      "valid": false,
+      "error": "SIGNATURE_MALFORMED"
+    },
+    {
+      "name": "no t",
+      "body": "{\"id\":\"evt_6573a1b2c3d4e5f60718293a\",\"type\":\"imagine.images.ready\",\"createdAt\":\"2026-11-20T00:00:00.000Z\",\"projectId\":\"6573a1b2c3d4e5f607182930\",\"data\":{\"job\":{\"_id\":\"6573a1b2c3d4e5f607182931\",\"name\":\"Catalogue · Café crème ☕\",\"status\":\"running\",\"counts\":{\"total\":1000,\"done\":50,\"failed\":0,\"cancelled\":0},\"externalRef\":\"catalogue-2026-11\"},\"images\":[{\"_id\":\"6573a1b2c3d4e5f607182932\",\"seq\":0,\"externalRef\":\"sku-123/front\",\"url\":null,\"destination\":{\"destinationId\":\"6573a1b2c3d4e5f607182933\",\"bucket\":\"acme-images\",\"key\":\"imagine/6573a1b2c3d4e5f607182931/000000-6573a1b2c3d4e5f607182932.png\"}}],\"manifestKey\":\"imagine/6573a1b2c3d4e5f607182931/manifest-0001.json\"}}",
+      "header": "v1=d1d684647ea7ab524378b2b2729e552f5a36f8b6a77c74d21895c19caae1e490",
+      "secret": "whsec_0123456789abcdef0123456789abcdef0123456789abcdef",
+      "now": 1795132800,
+      "toleranceSec": 300,
+      "valid": false,
+      "error": "SIGNATURE_MALFORMED"
+    },
+    {
+      "name": "v1 is not 64 hex characters",
+      "body": "{\"id\":\"evt_6573a1b2c3d4e5f60718293a\",\"type\":\"imagine.images.ready\",\"createdAt\":\"2026-11-20T00:00:00.000Z\",\"projectId\":\"6573a1b2c3d4e5f607182930\",\"data\":{\"job\":{\"_id\":\"6573a1b2c3d4e5f607182931\",\"name\":\"Catalogue · Café crème ☕\",\"status\":\"running\",\"counts\":{\"total\":1000,\"done\":50,\"failed\":0,\"cancelled\":0},\"externalRef\":\"catalogue-2026-11\"},\"images\":[{\"_id\":\"6573a1b2c3d4e5f607182932\",\"seq\":0,\"externalRef\":\"sku-123/front\",\"url\":null,\"destination\":{\"destinationId\":\"6573a1b2c3d4e5f607182933\",\"bucket\":\"acme-images\",\"key\":\"imagine/6573a1b2c3d4e5f607182931/000000-6573a1b2c3d4e5f607182932.png\"}}],\"manifestKey\":\"imagine/6573a1b2c3d4e5f607182931/manifest-0001.json\"}}",
+      "header": "t=1795132800,v1=d1d684647ea7ab524378b2b2729e552f5a36f8b6a77c74d21895c19caae1e49",
+      "secret": "whsec_0123456789abcdef0123456789abcdef0123456789abcdef",
+      "now": 1795132800,
+      "toleranceSec": 300,
+      "valid": false,
+      "error": "SIGNATURE_MALFORMED"
+    },
+    {
+      "name": "empty header",
+      "body": "{\"id\":\"evt_6573a1b2c3d4e5f60718293a\",\"type\":\"imagine.images.ready\",\"createdAt\":\"2026-11-20T00:00:00.000Z\",\"projectId\":\"6573a1b2c3d4e5f607182930\",\"data\":{\"job\":{\"_id\":\"6573a1b2c3d4e5f607182931\",\"name\":\"Catalogue · Café crème ☕\",\"status\":\"running\",\"counts\":{\"total\":1000,\"done\":50,\"failed\":0,\"cancelled\":0},\"externalRef\":\"catalogue-2026-11\"},\"images\":[{\"_id\":\"6573a1b2c3d4e5f607182932\",\"seq\":0,\"externalRef\":\"sku-123/front\",\"url\":null,\"destination\":{\"destinationId\":\"6573a1b2c3d4e5f607182933\",\"bucket\":\"acme-images\",\"key\":\"imagine/6573a1b2c3d4e5f607182931/000000-6573a1b2c3d4e5f607182932.png\"}}],\"manifestKey\":\"imagine/6573a1b2c3d4e5f607182931/manifest-0001.json\"}}",
+      "header": "",
+      "secret": "whsec_0123456789abcdef0123456789abcdef0123456789abcdef",
+      "now": 1795132800,
+      "toleranceSec": 300,
+      "valid": false,
+      "error": "SIGNATURE_MISSING"
+    },
+    {
+      "name": "a ping",
+      "body": "{\"id\":\"evt_ping\",\"type\":\"imagine.ping\",\"createdAt\":\"2026-11-20T00:00:00.000Z\",\"projectId\":\"6573a1b2c3d4e5f607182930\",\"data\":{}}",
+      "header": "t=1795132801,v1=093dd9ae8589598ec18681aa1c767a27a2bd379993774f80e03dd690853afc1c",
+      "secret": "whsec_0123456789abcdef0123456789abcdef0123456789abcdef",
+      "now": 1795132811,
+      "toleranceSec": 300,
+      "valid": true
+    }
+  ]
+}

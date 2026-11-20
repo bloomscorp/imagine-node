@@ -1,0 +1,14 @@
+{
+  "name": "imagine-node-examples",
+  "private": true,
+  "type": "module",
+  "description": "Examples for @bloomscorp/imagine-node. Not built or published.",
+  "scripts": {
+    "server": "node server.mjs",
+    "bulk": "node bulk-job.mjs"
+  },
+  "dependencies": {
+    "@bloomscorp/imagine-node": "file:..",
+    "express": "^4.21.0"
+  }
+}
